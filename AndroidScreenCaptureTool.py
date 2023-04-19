@@ -67,7 +67,7 @@ class ScreenCaptureApp(QMainWindow):
         self.setGeometry(100, 100, 1400, 800)
 
         self.image_view = CroppableImageView()
-
+        self.current_device = None
         # Device list
         self.device_list = QListWidget()
         self.device_list.setMaximumWidth(200)  # Set the maximum width for the device list
@@ -85,17 +85,17 @@ class ScreenCaptureApp(QMainWindow):
         # Layouts
         main_layout = QHBoxLayout()
         left_layout = QVBoxLayout()
-        right_layout = QVBoxLayout()
+        self.right_layout = QVBoxLayout()
 
         left_layout.addWidget(self.device_list)
         left_layout.addWidget(self.refresh_button)
         left_layout.addWidget(self.capture_button)
         left_layout.addWidget(self.crop_button)
 
-        right_layout.addWidget(self.image_view)
+        self.right_layout.addWidget(self.image_view)
 
         main_layout.addLayout(left_layout)
-        main_layout.addLayout(right_layout)
+        main_layout.addLayout(self.right_layout)
 
         central_widget = QWidget()
         central_widget.setLayout(main_layout)
@@ -117,6 +117,16 @@ class ScreenCaptureApp(QMainWindow):
         self.current_device = item.text()
 
     def capture_screenshot(self):
+        def clear_layout(layout):
+            while layout.count():
+                child = layout.takeAt(0)
+                widget = child.widget()
+                if widget:
+                    widget.deleteLater()
+        self.image_view = CroppableImageView()
+        clear_layout(self.right_layout)
+        self.right_layout.removeWidget(self.image_view)
+        self.right_layout.addWidget(self.image_view)
         if self.current_device:
             os.system("adb -s {} shell screencap -p /sdcard/screenshot.png".format(self.current_device))
             os.system("adb -s {} pull /sdcard/screenshot.png".format(self.current_device))
